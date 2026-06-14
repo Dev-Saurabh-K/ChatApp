@@ -6,6 +6,7 @@ origins = [
     "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:8080",
+    "https://chat-app-kappa-tawny.vercel.app",
 ]
 
 
