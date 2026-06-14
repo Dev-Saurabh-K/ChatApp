@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const URL = import.meta.env.VITE_API_WURL;
+  const {room_id, username} = useParams();
 
-  const socketRef = useRef(null);
+  const socketRef = useRef(null); 
   useEffect(() => {
-    socketRef.current = new WebSocket(`${URL}/ws/1/saurabh`);
+    socketRef.current = new WebSocket(`${URL}/ws/${room_id}/${username}`);
     socketRef.current.onmessage = (event) => {
       console.log("message came");
       console.log(messages);
