@@ -19,7 +19,8 @@ function App() {
     setMessages((prev) => ([...prev, input]));
   };
   return (
-    <div>
+    <div className="bg-violet-950 w-full min-h-screen">
+      
       <input value={input} onChange={(e) => setInput(e.target.value)} />
       <div onClick={sendmessage}>submit</div>
       <div>
