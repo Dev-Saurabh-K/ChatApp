@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 function App() {
   const [messages, setMessages] = useState([]);
+  // const [usermessage, setUsermessage] = useState([]);
   const [input, setInput] = useState("");
   const URL = import.meta.env.VITE_API_WURL;
-  const {room_id, username} = useParams();
+  const { room_id, username } = useParams();
 
-  const socketRef = useRef(null); 
+  const socketRef = useRef(null);
   useEffect(() => {
     socketRef.current = new WebSocket(`${URL}/ws/${room_id}/${username}`);
     socketRef.current.onmessage = (event) => {
@@ -23,6 +24,7 @@ function App() {
   const sendmessage = () => {
     socketRef.current.send(input);
     setInput("");
+    // setUsermessage((prev) => [...prev, input]);
     // setMessages((prev) => [...prev, input]);
   };
   return (
@@ -30,14 +32,16 @@ function App() {
       <div className="text-4xl text-sky-100 font-bold fixed top-0 bg-sky-950 w-full p-2 flex items-center justify-center">
         chat app
       </div>
-      <div className="bg-sky-950 p-2 rounded-md w-1/2 overflow-y-auto h-125 scroll-">
+      <div className="bg-sky-950 p-2 rounded-md w-1/2 overflow-y-auto h-125 text-sky-50">
         {messages.map((message, index) => {
           const msg = JSON.parse(message);
           return (
-            <div key={index} className="flex flex-row gap-2">
-              <div>{msg.username}:</div>
-              <div>{msg.data}</div>
-            </div>
+            <>
+              <div key={index} className="flex flex-row gap-2">
+                <div>{msg.username}:</div>
+                <div>{msg.data}</div>
+              </div>
+            </>
           );
         })}
       </div>
