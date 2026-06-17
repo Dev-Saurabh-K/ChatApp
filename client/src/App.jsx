@@ -1,21 +1,47 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
+import { useUsernameStore } from "./store/usernameStore";
+import axios from "axios";
 function App() {
   const [messages, setMessages] = useState([]);
+  const username = useUsernameStore((state)=>state.username);
+  const setUsername = useUsernameStore((state)=>state.setUsername);
   // const [usermessage, setUsermessage] = useState([]);
   const [input, setInput] = useState("");
   const URL = import.meta.env.VITE_API_WURL;
-  const { room_id, username } = useParams();
+  const { room_id } = useParams();
+  const token = localStorage.getItem("access_token");
 
   const socketRef = useRef(null);
+
+  const USERURL = `${import.meta.env.VITE_API_URL}/users/protected/user/me`;
+
+  useEffect(()=>{
+    const fetchUsername = async() =>{
+      const fusername = await axios.get(USERURL,{
+        headers:{
+          Authorization: `Bearer ${token}`
+        }
+      })
+      if(fusername){
+        setUsername(fusername.data.username);
+      }
+    }
+    fetchUsername();
+  },[])
+
+
   useEffect(() => {
-    socketRef.current = new WebSocket(`${URL}/ws/${room_id}/${username}`);
+     if (!username) return; // wait for username
+    socketRef.current = new WebSocket(
+      `${URL}/ws/${room_id}/${username}?token=${token}`,
+    );
     socketRef.current.onmessage = (event) => {
       console.log("message came");
       console.log(messages);
       setMessages((prev) => [...prev, event.data]);
     };
-  }, []);
+  }, [username, room_id, token]);
 
   useEffect(() => {
     console.log(messages);
@@ -36,12 +62,10 @@ function App() {
         {messages.map((message, index) => {
           const msg = JSON.parse(message);
           return (
-            <>
-              <div key={index} className="flex flex-row gap-2">
-                <div>{msg.username}:</div>
-                <div>{msg.data}</div>
-              </div>
-            </>
+            <div key={index} className="flex flex-row gap-2">
+              <div>{msg.username}:</div>
+              <div>{msg.data}</div>
+            </div>
           );
         })}
       </div>

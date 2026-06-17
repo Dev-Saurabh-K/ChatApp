@@ -1,11 +1,16 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+
+from routes import authRoute
+from routes import chatRoute
+from routes import userRoute
 
 origins = [
     "http://localhost.tiangolo.com",
     "https://localhost.tiangolo.com",
     "http://localhost",
-    "http://localhost:8080",
+    "http://localhost:5173",
     "https://chat-app-kappa-tawny.vercel.app",
 ]
 
@@ -21,44 +26,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(authRoute.router)
+app.include_router(chatRoute.router)
+app.include_router(userRoute.router)
 
-rooms = {}
+
+
 
 @app.get("/")
 def text_app():
     return {"message": "ok"}
 
-@app.websocket("/ws/{room_id}/{username}")
-async def websocket_endpoint(websocket: WebSocket, room_id: int, username: str):
-    await websocket.accept()
 
-    if room_id not in rooms:
-        rooms[room_id] = []
-
-    rooms[room_id].append({"socket":websocket, "username":username})
-
-    print(rooms)
-
-    try:
-        while True:
-            data = await websocket.receive_text()
-
-            for client in rooms[room_id]:
-                if client["socket"] != websocket:
-                    await client["socket"].send_json({
-                        "username":username,
-                        "data":data})
-
-    # except WebSocketDisconnect:
-    #     rooms[room_id].remove(websocket)
-
-    #     if len(rooms[room_id]) == 0:
-    #         del rooms[room_id]
-
-    #     print(rooms)
-    except WebSocketDisconnect:
-        rooms[room_id] = [
-            client
-            for client in rooms[room_id]
-            if client["socket"] != websocket
-        ]
