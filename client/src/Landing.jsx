@@ -1,34 +1,136 @@
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import Sidebar from "./components/Sidebar";
-// import { useUsernameStore } from "./store/usernameStore";
+import { useEffect, useRef, useState } from "react";
 
-function Landing() {
-  const navigate = useNavigate();
-  const [room_id, setRoom_id] = useState(0);
-  const handleClick = () => {
-    navigate(`/${room_id}`);
+function Chat() {
+  const socketRef = useRef(null);
+
+  const [receiver, setReceiver] = useState("");
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
+
+  const username = localStorage.getItem("username");
+  const token = localStorage.getItem("access_token");
+
+  useEffect(() => {
+    if (!token) return;
+
+    socketRef.current = new WebSocket(
+      `${import.meta.env.VITE_API_WURL}/ws?token=${token}`
+    );
+
+    socketRef.current.onopen = () => {
+      console.log("Connected");
+    };
+
+    socketRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      setMessages((prev) => [...prev, data]);
+    };
+
+    socketRef.current.onerror = (error) => {
+      console.log("WebSocket Error:", error);
+    };
+
+    socketRef.current.onclose = () => {
+      console.log("Disconnected");
+    };
+
+    return () => {
+      socketRef.current?.close();
+    };
+  }, [token]);
+
+  const sendMessage = () => {
+    if (!input.trim()) return;
+
+    if (!receiver.trim()) {
+      alert("Enter receiver username");
+      return;
+    }
+
+    const payload = {
+      receiver,
+      message: input,
+    };
+
+    socketRef.current.send(JSON.stringify(payload));
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        sender: username,
+        message: input,
+      },
+    ]);
+
+    setInput("");
   };
-  // const username = useUsernameStore((state)=>state.username);
+
   return (
-    <div className="w-full min-h-screen bg-sky-900 text-sky-50 flex items-center justify-center">
-      <Sidebar/>
-      <div className="flex flex-col items-center justify-center border border-blue-400 rounded-md p-8 gap-4">
-        
-        <div className="text-center">Room ID</div>
-        {/* {username} */}
+    <div className="w-full min-h-screen bg-slate-900 text-white flex flex-col">
+      {/* Header */}
+      <div className="p-4 border-b border-slate-700">
+        <h1 className="text-xl font-bold">
+          Logged in as: {username}
+        </h1>
+      </div>
+
+      {/* Receiver */}
+      <div className="p-4 border-b border-slate-700">
         <input
           type="text"
-          name="room_id"
-          value={room_id}
-          onChange={(e) => setRoom_id(e.target.value)}
-          className="text-sky-50 caret-sky-200 text-xl p-2 focus:outline-none text-center"
+          placeholder="Receiver Username"
+          value={receiver}
+          onChange={(e) => setReceiver(e.target.value)}
+          className="w-full p-2 rounded bg-slate-800 outline-none"
         />
-        <div onClick={handleClick} className="p-2 bg-sky-500 rounded-md w-full cursor-pointer text-center">Go..</div>
       </div>
-      
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`mb-3 flex ${
+              msg.sender === username
+                ? "justify-end"
+                : "justify-start"
+            }`}
+          >
+            <div className="bg-slate-800 rounded-lg p-3 max-w-md">
+              <div className="text-xs text-slate-400 mb-1">
+                {msg.sender}
+              </div>
+              <div>{msg.message}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Input */}
+      <div className="p-4 border-t border-slate-700 flex gap-2">
+        <input
+          type="text"
+          placeholder="Type message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="flex-1 p-2 rounded bg-slate-800 outline-none"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              sendMessage();
+            }
+          }}
+        />
+
+        <button
+          onClick={sendMessage}
+          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
+        >
+          Send
+        </button>
+      </div>
     </div>
   );
 }
 
-export default Landing;
+export default Chat;

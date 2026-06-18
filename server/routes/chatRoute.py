@@ -8,24 +8,113 @@ router = APIRouter()
 
 rooms = {}
 
-@router.websocket("/ws/{reciever}/{sender}")
-async def websocket_chat(websocket: WebSocket, reciever: str, sender: str, db: Session=Depends(get_db)):
+
+# @router.websocket("/ws/{reciever}/{sender}")
+# async def websocket_chat(websocket: WebSocket, reciever: str, sender: str, db: Session=Depends(get_db)):
+#     token = websocket.query_params.get("token")
+#     if not token:
+#         await websocket.close(code=1008)
+#         return
+    
+#     payload = decode_access_token(token)
+
+#     if not payload:
+#         await websocket.close(code=1008)
+#         return
+    
+#     user = db.query(User).filter(User.username==payload["sub"]).first()
+#     if user is None:
+#         raise WebSocketException(code=1008, reason="Unregistered")
+    
+#     await websocket.accept()
+
+#     try:
+#         while(True):
+#             data = await websocket.receive_text()
+
+#             if(sender == cl)
+
+active_connections = {}
+
+# @router.websocket("/ws/{receiver}/{sender}")
+# async def websocket_chat(
+#     websocket: WebSocket,
+#     receiver: str,
+#     sender: str
+# ):
+#     await websocket.accept()
+
+#     active_connections[sender] = websocket
+
+#     try:
+#         while True:
+#             text = await websocket.receive_text()
+
+#             # save in db
+
+#             if receiver in active_connections:
+
+#                 await active_connections[receiver].send_json({
+#                     "sender": sender,
+#                     "message": text
+#                 })
+
+#     except WebSocketDisconnect:
+#         active_connections.pop(sender, None)
+
+
+@router.websocket("/ws")
+async def websocket_chat(websocket: WebSocket):
     token = websocket.query_params.get("token")
+
     if not token:
         await websocket.close(code=1008)
         return
-    
+
     payload = decode_access_token(token)
 
     if not payload:
         await websocket.close(code=1008)
         return
-    
-    user = db.query(User).filter(User.username==payload["sub"]).first()
-    if user is None:
-        raise WebSocketException(code=1008, reason="Unregistered")
-    
-    await websocket.accept();
+
+    db: Session = next(get_db())
+
+    user = db.query(User).filter(
+        User.username == payload["sub"]
+    ).first()
+
+    if not user:
+        await websocket.close(code=1008)
+        return
+
+    username = user.username
+
+    await websocket.accept()
+
+    active_connections[username] = websocket
+
+    print(f"{username} connected")
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+
+            receiver = data["receiver"]
+            message = data["message"]
+
+            # save to database here if needed
+
+            if receiver in active_connections:
+
+                await active_connections[receiver].send_json({
+                    "sender": username,
+                    "message": message
+                })
+
+    except WebSocketDisconnect:
+        active_connections.pop(username, None)
+        print(f"{username} disconnected")
+
 
 # //continue from here
 

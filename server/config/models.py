@@ -24,6 +24,14 @@ class Message(Base):
     content = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class PrivateMessage(Base):
+    __tablename__="private_table"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    receiver_id = Column(Integer, ForeignKey("users.id"))
+    content = Column(String)
+
 
 
 

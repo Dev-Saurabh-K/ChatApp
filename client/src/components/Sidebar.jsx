@@ -1,14 +1,14 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useUsernameStore } from "../store/usernameStore";
-import { useNavigate } from "react-router-dom";
+import { useRecieverUsernameStore } from "../store/recieverUsernameStore";
+// import { useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
   const URL = `${import.meta.env.VITE_API_URL}/api/get/users`;
   const token = localStorage.getItem("access_token");
   const [users, setUsers] = useState([]);
-  const setUsername = useUsernameStore((state)=>state.setUsername);
-  const navigate = useNavigate();
+  const setRecieveUsername = useRecieverUsernameStore((state)=>state.setRecieveUsername);
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -24,7 +24,7 @@ const Sidebar = () => {
   }, [token]);
 
   const handleClick = async (e)=>{
-    setUsername(e.target.innerText);
+    setRecieveUsername(e.target.innerText);
     // navigate("/");
   }
   return (
