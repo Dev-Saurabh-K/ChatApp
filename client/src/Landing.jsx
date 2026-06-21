@@ -1,13 +1,19 @@
+import Sidebar from "./components/Sidebar";
+import {useUsernameStore}  from "./store/usernameStore"
+import { useRecieverUsernameStore } from "./store/recieverUsernameStore";
 import { useEffect, useRef, useState } from "react";
+
 
 function Chat() {
   const socketRef = useRef(null);
 
-  const [receiver, setReceiver] = useState("");
+  // const [receiver, setReceiver] = useState("");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
 
-  const username = localStorage.getItem("username");
+  // const username = localStorage.getItem("username");
+  const username = useUsernameStore((state)=>state.username);
+  const recieverusername = useRecieverUsernameStore((state)=>state.username);
   const token = localStorage.getItem("access_token");
 
   useEffect(() => {
@@ -43,13 +49,13 @@ function Chat() {
   const sendMessage = () => {
     if (!input.trim()) return;
 
-    if (!receiver.trim()) {
-      alert("Enter receiver username");
-      return;
-    }
+    // if (!recieverusername.trim()) {
+    //   alert("Enter receiver username");
+    //   return;
+    // }
 
     const payload = {
-      receiver,
+      recieverusername,
       message: input,
     };
 
@@ -74,9 +80,10 @@ function Chat() {
           Logged in as: {username}
         </h1>
       </div>
+      <Sidebar/>
 
       {/* Receiver */}
-      <div className="p-4 border-b border-slate-700">
+      {/* <div className="p-4 border-b border-slate-700">
         <input
           type="text"
           placeholder="Receiver Username"
@@ -84,7 +91,7 @@ function Chat() {
           onChange={(e) => setReceiver(e.target.value)}
           className="w-full p-2 rounded bg-slate-800 outline-none"
         />
-      </div>
+      </div> */}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4">

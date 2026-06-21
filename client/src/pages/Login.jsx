@@ -1,10 +1,12 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {useUsernameStore}  from "../store/usernameStore"
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const setUsernameLS = useUsernameStore((state)=>state.setUsername);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -26,6 +28,7 @@ const Login = () => {
       localStorage.setItem("access_token", response.data.access_token);
       console.log("Login successful");
       console.log(response.data);
+      setUsernameLS(username);
       navigate("/landing")
     } catch (error) {
       console.error("Login failed", error);
